@@ -27,13 +27,11 @@ def compare_images(request):
         # Convert BGR image to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Perform face detection or any other image processing tasks here
-
-        # Compare image with user profiles
+        # Perform face recognition
         identified_user = compare_with_user_profiles(image_rgb)
 
         if identified_user:
-            return JsonResponse({'message': 'User found: {}'.format(identified_user.username)})  # Return the username of the identified user
+            return JsonResponse({'message': 'User found: {}'.format(identified_user.username)})
         else:
             return JsonResponse({'message': 'User not found'})
     else:
@@ -44,13 +42,23 @@ def compare_with_user_profiles(image):
     # Get all user profiles
     user_profiles = UserProfile.objects.all()
 
-    # Perform image comparison with user profiles
-    for profile in user_profiles:
-        # Implement image comparison logic (e.g., using OpenCV)
-        pass
+    # Load the pre-trained face recognition model (e.g., LBPH)
+    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+    # Load the trained model weights
+    face_recognizer.read("path/to/trained_model.xml")  # Update the path with your trained model
 
-    # Placeholder return value
-    return None
+    # Convert the input image to grayscale (required for face recognition)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Perform face recognition on the input image
+    label, confidence = face_recognizer.predict(gray_image)
+
+    # If confidence is below a certain threshold, consider it a match
+    if confidence < 100:  # You may need to adjust this threshold based on your model's performance
+        identified_user = UserProfile.objects.get(id=label)  # Assuming user ID corresponds to label
+        return identified_user
+    else:
+        return None
 
 
 def login_view(request):
