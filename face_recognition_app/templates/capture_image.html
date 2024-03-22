@@ -146,14 +146,14 @@
         <div id="video-container">
             <video id="video" autoplay></video>
         </div>
-
+        
         <button id="capture-btn">Capture Image</button>
 
         <canvas id="canvas" style="display: none;"></canvas>
         <button id="submit-btn" type="submit">Submit Image</button>
         <div id="loader" class="loader"></div>
 
-        <div id="result"></div>
+        <div id="result"><h1>Welcome, {{ first_name }} {{ last_name }}</h1></div>
         <div id="captured-image-container">
             <h2>Captured Image</h2>
             <img id="captured-image" src="" alt="Captured Image">

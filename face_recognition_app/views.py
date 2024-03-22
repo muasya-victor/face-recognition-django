@@ -1,66 +1,125 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import UserProfile
+from .models import UserProfile , CustomUser
 import base64
 import numpy as np
 import cv2
 from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 
 @login_required
 def capture_image(request):
-    return render(request, 'capture_image.html')
+    # Get the last entry in the CustomUser model
+    last_user = "no user found"
+    last_user = CustomUser.objects.last()
 
+    # Check if last_user exists and extract first_name and last_name
+    if last_user:
+        first_name = last_user.first_name
+        last_name = last_user.last_name
+    else:
+        first_name = "no "
+        last_name = " user found"
 
+    context = {
+        'first_name': first_name,
+        'last_name': last_name,
+    }
+
+    return render(request, 'capture_image.html', context)
 def compare_images(request):
-    if request.method == 'POST' and 'image_data' in request.POST:
-        # Get image data from POST request
-        image_data = request.POST['image_data'].split(',')[1]
+    if request.method == 'POST' and 'user_id' in request.POST:
+        user_id = request.POST['user_id']
+        
+        # Get UserProfile object based on user_id
+        user_profile = UserProfile.objects.filter(user_id=user_id).first()
 
-        # Convert base64 image data to numpy array
-        image_bytes = base64.b64decode(image_data)
-        image_np_array = np.frombuffer(image_bytes, dtype=np.uint8)
-        image = cv2.imdecode(image_np_array, cv2.IMREAD_COLOR)
+        if user_profile and user_profile.profile_picture:
+            # Read the image data from the profile_picture field
+            image_data = user_profile.profile_picture.read()
 
-        # Convert BGR image to RGB
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # Convert base64 image data to NumPy array
+            try:
+                image_np_array = np.frombuffer(image_data, dtype=np.uint8)
 
-        # Perform face recognition
-        identified_user = compare_with_user_profiles(image_rgb)
+                # Decode the image array to OpenCV format
+                image = cv2.imdecode(image_np_array, cv2.IMREAD_COLOR)
 
-        if identified_user:
-            return JsonResponse({'message': 'User found: {}'.format(identified_user.username)})
+                # Convert the input image to RGB (assuming it's in BGR format)
+                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+                # Perform face recognition or other processing
+                identified_user = compare_with_user_profiles(image_rgb)
+
+                if identified_user:
+                    user_details = {
+                        'username': identified_user.username,
+                        'email': identified_user.email,
+                        'first_name': identified_user.first_name,
+                        'last_name': identified_user.last_name,
+                        # Add more user details as needed
+                    }
+                    print(user_details)
+                    return JsonResponse({'message': 'User found', 'user_details': user_details})
+                else:
+                    return JsonResponse({'message': 'User not found'})
+
+            except Exception as e:
+                return JsonResponse({'error': f'Error processing image: {e}'}, status=400)
+
         else:
-            return JsonResponse({'message': 'User not found'})
+            return JsonResponse({'message': 'User profile not found or profile picture is empty'}, status=400)
+
     else:
-        return JsonResponse({'error': 'Invalid request'})
+        return JsonResponse({'error': 'Invalid request'}, status=400)
 
+def compare_with_user_profiles(request):
+    # env = Env()
+    # env.read_env()  # Load environment variables from .env file
 
-def compare_with_user_profiles(image):
-    # Get all user profiles
-    user_profiles = UserProfile.objects.all()
+    CustomUser = get_user_model()
 
-    # Load the pre-trained face recognition model (e.g., LBPH)
-    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-    # Load the trained model weights
-    face_recognizer.read("path/to/trained_model.xml")  # Update the path with your trained model
+    if request.method == 'POST' and 'user_id' in request.POST:
+        user_id = request.POST['user_id']
+        
+        # Get UserProfile object based on user_id
+        user_profile = get_object_or_404(UserProfile, user_id=1)
 
-    # Convert the input image to grayscale (required for face recognition)
-    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        # Check if the profile_picture field is not empty
+        if user_profile.profile_picture:
+            # Read the image data from the profile_picture field
+            image_data = user_profile.profile_picture.read()
 
-    # Perform face recognition on the input image
-    label, confidence = face_recognizer.predict(gray_image)
+            # Convert base64 image data to NumPy array
+            try:
+                image_np_array = np.frombuffer(image_data, dtype=np.uint8)
 
-    # If confidence is below a certain threshold, consider it a match
-    if confidence < 100:  # You may need to adjust this threshold based on your model's performance
-        identified_user = UserProfile.objects.get(id=label)  # Assuming user ID corresponds to label
-        return identified_user
+                # Decode the image array to OpenCV format
+                image = cv2.imdecode(image_np_array, cv2.IMREAD_COLOR)
+
+                # Convert the input image to grayscale
+                gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+                # Process the image (e.g., face detection and recognition)
+                # ...
+                
+                # Example response for demonstration
+                response_data = {'message': 'Image processed successfully'}
+                return JsonResponse(response_data)
+
+            except Exception as e:
+                error_message = f"Error processing image: {e}"
+                return JsonResponse({'error': error_message}, status=400)
+        
+        else:
+            return JsonResponse({'error': 'Profile picture not found or empty'}, status=400)
+
     else:
-        return None
-
-
+        return JsonResponse({'error': 'Invalid request method or missing user_id'}, status=400)
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)

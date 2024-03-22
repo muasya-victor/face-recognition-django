@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 
 LOGIN_URL = 'login'
 
-
+AUTH_USER_MODEL = 'face_recognition_app.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [

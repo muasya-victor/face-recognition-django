@@ -4,22 +4,20 @@ from django.contrib.auth.models import AbstractUser
 
 
 
-class CustomUser(models.Model):
+class CustomUser(AbstractUser):
     STUDENT = 'student'
     STAFF = 'staff'
     USER_TYPE_CHOICES = [
         (STUDENT, 'student'),
         (STAFF, 'staff'),
     ]
-    email = models.EmailField(unique=True)
+    
     phone_code = models.CharField(max_length=4, blank=True, null=True, default="+254")
     first_name = models.CharField(max_length=30, blank=True, null=True)
     last_name = models.CharField(max_length=30, blank=True, null=True)
     identification_number = models.CharField(max_length=50, unique=True)
     avatar = models.FileField(blank=True, null=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default = 'student')
-    username = models.CharField(max_length=128, unique=True, blank= True, null= True)
-    password = models.CharField(max_length=128, default='123456')
     phone_number = models.CharField(max_length=10, blank=True, null=True, unique=True)
     nationality = models.CharField(max_length=30, blank=True, null=True)
     
