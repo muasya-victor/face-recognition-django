@@ -36,56 +36,70 @@ def compare_image(request):
         # Get the captured image from the request
         captured_image = request.FILES['captured_image']
 
-
         RecognitionHistory.objects.create(recognition_image=captured_image)
         last_uploaded_image = RecognitionHistory.objects.last()
 
         # Convert the captured image to a numpy array
         captured_image_array = np.array(cv2.imread(str(last_uploaded_image.recognition_image)))
 
+        # Perform face detection on the captured image
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces_captured = face_cascade.detectMultiScale(captured_image_array, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+        if len(faces_captured) == 0:
+            return render(request, 'does_not_exist.html')
+
+        # Resize and crop the detected faces from the captured image
+        faces_captured_resized = []
+        for (x, y, w, h) in faces_captured:
+            faces_captured_resized.append(cv2.resize(captured_image_array[y:y+h, x:x+w], (92, 112)))
+
         # Get all the images from the database
         db_images = UserProfile.objects.all()
-        print(db_images)
 
         # Initialize a list to store the similarity scores
         similarity_scores = []
 
         # Loop through all the images in the database
         for db_image in db_images:
-            # Convert the database image to a numpy array
+            # Perform face detection on the database image
             db_image_array = np.array(cv2.imread(db_image.profile_picture.path))
+            faces_db = face_cascade.detectMultiScale(db_image_array, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-            # Calculate the similarity score between the captured image and the database image
-            similarity_score = cv2.compareHist(cv2.calcHist([captured_image_array], [0], None, [64], [0, 256]),
-                                              cv2.calcHist([db_image_array], [0], None, [64], [0, 256]),
-                                              cv2.HISTCMP_CORREL) * 100
+            if len(faces_db) == 0:
+                continue
 
-            # Append the similarity score to the list
-            similarity_scores.append(similarity_score)
+            # Resize and crop the detected faces from the database image
+            faces_db_resized = []
+            for (x, y, w, h) in faces_db:
+                faces_db_resized.append(cv2.resize(db_image_array[y:y+h, x:x+w], (92, 112)))
 
-        # Get the index of the most similar image in the database
+            # Compute similarity scores for each pair of faces
+            for face_captured in faces_captured_resized:
+                for face_db in faces_db_resized:
+                    similarity_score = cv2.compareHist(cv2.calcHist([face_captured], [0], None, [64], [0, 100]),
+                                                      cv2.calcHist([face_db], [0], None, [64], [0, 100]),
+                                                      cv2.HISTCMP_CORREL) * 100
+
+                    similarity_scores.append(similarity_score)
+
+        # Get the index of the most similar face in the database
         most_similar_index = np.argmax(similarity_scores)
 
-        # Get the most similar image from the database
-        most_similar_image = db_images[int(most_similar_index)]
-        print(most_similar_image.user)
-        print(
-            get_custom_user_by_username(most_similar_image.user.username),
-            similarity_scores[most_similar_index],
-            "userrrrr"
-        )
-        print(f"Most similar image: {most_similar_image.user.username}, match percentage: {similarity_scores[most_similar_index]:.2f}%")
+        # Calculate the match percentage
+        num_faces_db = len(faces_db_resized)
+        match_percentage = similarity_scores[most_similar_index] / 100
+        most_similar_face_index = int(most_similar_index // num_faces_db)
 
-      
-        if similarity_scores[most_similar_index] > 96 :
-            # Return the most similar image to the user
-            return render(request, 'compare_result.html', {'user': most_similar_image})
+        if most_similar_face_index < len(db_images):
+            print({'user': db_images[most_similar_face_index], 'identified_user': db_images[most_similar_face_index].user, 'match_percentage': match_percentage})
+            # Return the most similar face and the user information
+            return render(request, 'compare_result.html', {'user': db_images[most_similar_face_index], 'identified_user': db_images[most_similar_face_index].user, 'match_percentage': match_percentage})
         else:
-            return render(request, 'does_not_exist.html')
-
-
-    return render(request, 'compare_image.html')
-
+            # Return an error message
+            return render(request, 'does_not_exist.html', {'error_message': 'Index out of range'})
+    else:
+        return render(request, 'compare_image.html')
 
 
 # def compare_images(request):
