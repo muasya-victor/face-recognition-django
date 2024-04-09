@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compare Image</title>
+</head>
+<body>
+    <h1>Compare Image</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="captured_image" accept="image/*">
+        <button type="submit">Compare</button>
+    </form>
+</body>
+</html>

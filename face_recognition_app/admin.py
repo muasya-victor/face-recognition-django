@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, UserProfile, CapturedImage
+from .models import CustomUser, UserProfile, CapturedImage,RecognitionHistory
 
 
 admin.site.register(CustomUser)
+admin.site.register(RecognitionHistory)
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):

@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import UserProfile , CustomUser
-import base64
 import numpy as np
-from xhtml2pdf import pisa 
-# from weasyprint import HTML
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 import cv2 
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -16,27 +16,78 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from .models import RecognitionHistory
+import base64
+
+
+def get_custom_user_by_username(username):
+    User = get_user_model()
+    try:
+        user = User.objects.get(username=username)
+        return user
+    except User.DoesNotExist:
+        return None
 
 @login_required
-def capture_image(request):
-    # Get the last entry in the CustomUser model
-    last_user = "no user found"
-    last_user = CustomUser.objects.last()
+def compare_image(request):
+    if request.method == 'POST':
+        # Get the captured image from the request
+        captured_image = request.FILES['captured_image']
 
-    # Check if last_user exists and extract first_name and last_name
-    if last_user:
-        first_name = last_user.first_name
-        last_name = last_user.last_name
-    else:
-        first_name = "no "
-        last_name = " user found"
 
-    context = {
-        'first_name': first_name,
-        'last_name': last_name,
-    }
+        RecognitionHistory.objects.create(recognition_image=captured_image)
+        last_uploaded_image = RecognitionHistory.objects.last()
 
-    return render(request, 'capture_image.html', context)
+        # Convert the captured image to a numpy array
+        captured_image_array = np.array(cv2.imread(str(last_uploaded_image.recognition_image)))
+
+        # Get all the images from the database
+        db_images = UserProfile.objects.all()
+        print(db_images)
+
+        # Initialize a list to store the similarity scores
+        similarity_scores = []
+
+        # Loop through all the images in the database
+        for db_image in db_images:
+            # Convert the database image to a numpy array
+            db_image_array = np.array(cv2.imread(db_image.profile_picture.path))
+
+            # Calculate the similarity score between the captured image and the database image
+            similarity_score = cv2.compareHist(cv2.calcHist([captured_image_array], [0], None, [64], [0, 256]),
+                                              cv2.calcHist([db_image_array], [0], None, [64], [0, 256]),
+                                              cv2.HISTCMP_CORREL) * 100
+
+            # Append the similarity score to the list
+            similarity_scores.append(similarity_score)
+
+        # Get the index of the most similar image in the database
+        most_similar_index = np.argmax(similarity_scores)
+
+        # Get the most similar image from the database
+        most_similar_image = db_images[int(most_similar_index)]
+        print(most_similar_image.user)
+        print(
+            get_custom_user_by_username(most_similar_image.user.username),
+            similarity_scores[most_similar_index],
+            "userrrrr"
+        )
+        print(f"Most similar image: {most_similar_image.user.username}, match percentage: {similarity_scores[most_similar_index]:.2f}%")
+
+      
+        if similarity_scores[most_similar_index] > 96 :
+            # Return the most similar image to the user
+            return render(request, 'compare_result.html', {'user': most_similar_image})
+        else:
+            return render(request, 'does_not_exist.html')
+
+
+    return render(request, 'compare_image.html')
+
+
+
 # def compare_images(request):
 #     if request.method == 'POST' and 'user_id' in request.POST:
 #         user_id = request.POST['user_id']

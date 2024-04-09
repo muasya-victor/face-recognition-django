@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compare Result</title>
+</head>
+<body>
+    <h1>Most Similar Image</h1>
+    {{user.profile_picture.url}} <brS>
+    {{user.user}}
+    <img src="{{user.profile_picture.url}}" alt="Most Similar Image">
+    <a href="{% url 'compare_image' %}">Compare Another Image</a>
+</body>
+</html>

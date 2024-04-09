@@ -32,3 +32,9 @@ class UserProfile(models.Model):
 class CapturedImage(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='captured_images/')
+
+class RecognitionHistory(models.Model):
+    recognition_image = models.ImageField(upload_to='review_image/', blank=True, null=True)
+    image_bytes = models.BinaryField(blank=True, null=True)
+    recogntion_time = models.TimeField(blank=True, null=True)
+    
