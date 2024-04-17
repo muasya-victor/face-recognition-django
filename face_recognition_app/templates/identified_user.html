@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Capture Image</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-200">
+
+    <div style="display: flex; flex-direction: column; gap:4px;" class="p-4 w-1/2 rounded-md flex flex-col gap-4 items-center justify-center">
+        <img src="{{ user.avatar.url }}" alt="User Avatar"
+                style="height: 300px; width: 300px; border-radius: 50%;" class="avatar-image">
+
+                <h1 class="text-4xl capitalize font-bold">
+                    {{user.user_type}}
+                </h1>
+
+                <p class="text-xl capitalize">
+                    {{user.first_name}}
+                    {{user.last_name}}
+                </p>
+
+                <p class="text-xl">
+                    {{user.identification_number}}
+                </p>
+
+                <p class="text-xl">
+                    {{user.phone_number}}
+                </p>
+
+                <a href="/" class="cursor-pointer underline text-blue-500 hover:text-blue-600">Back to Home</a>
+
+    </div>
+
+    
+
+</body>
+</html>

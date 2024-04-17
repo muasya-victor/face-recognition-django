@@ -20,6 +20,8 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from .models import RecognitionHistory
 import base64
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 
 def get_custom_user_by_username(username):
@@ -29,6 +31,14 @@ def get_custom_user_by_username(username):
         return user
     except User.DoesNotExist:
         return None
+
+def identified_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    context = {
+        'user': user
+    }
+    return render(request, 'identified_user.html', context)
+
 
 
 def compare_image(request):
@@ -122,7 +132,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('capture_image')  # Redirect to the desired page after login
+            return redirect('admin_report')  # Redirect to the desired page after login
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
@@ -170,3 +180,62 @@ def generate_pdf(request):
         return HttpResponse('PDF generation error!')
 
     return response
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+def generate_pdf_report(request):
+    # Fetch recognition history data
+    recognition_history = RecognitionHistory.objects.all()
+
+    # Create a response object
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="recognition_report.pdf"'
+
+    # Create a PDF object
+    pdf = SimpleDocTemplate(response, pagesize=A4)
+    
+    # Set font and size
+    styles = getSampleStyleSheet()
+    styleN = styles['BodyText']
+    styleN.alignment = 1
+
+    # Create table data
+    data = [["Recognition Time", "User"]]
+    for history in recognition_history:
+        data.append([str(history.recogntion_time), 'Gilbert'])
+
+    # Create table
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+
+    # Add table to PDF
+    elements = []
+    elements.append(table)
+
+    # Generate PDF
+    pdf.build(elements)
+
+    return response
+
+
+def login_history_view(request):
+    # Fetch all RecognitionHistory objects
+    history_entries = RecognitionHistory.objects.all()
+
+    # Pass history_entries to the template
+    context = {
+        'history_entries': history_entries
+    }
+
+    return render(request, 'admin.html', context)

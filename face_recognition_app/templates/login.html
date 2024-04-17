@@ -3,13 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <!-- Include Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Login</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-    </form>
+<body class="bg-gray-100 h-screen">
+
+    <div class="flex justify-center items-center h-full">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full sm:w-96">
+            <h1 class="text-2xl font-semibold mb-6 text-center">Login</h1>
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" name="username" id="username" placeholder="Enter username" 
+                           class="mt-1 p-2 w-full border rounded-md">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" name="password" id="password" placeholder="Enter password" 
+                           class="mt-1 p-2 w-full border rounded-md">
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>

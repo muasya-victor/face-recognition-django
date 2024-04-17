@@ -8,139 +8,156 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 </head>
 
-<body class="bg-gray-100 h-screen grid grid-cols-2">
+<body class="bg-gray-100 h-screen ">
+     <!-- Include Navigation Component -->
+     {% include 'components/nav.html' %}
 
-    <div class="container mx-auto p-8">
+     <!-- Content Section -->
+     <div class="container mx-auto mt-4">
+         {% block content %}
+         {% endblock %}
+     </div>
 
-        <h1 class="text-3xl font-bold mb-4">Image Comparison</h1>
 
-        <!-- Camera and Image Capture -->
-        <div class="mb-8">
-            <video id="video" class="border rounded-md" width="500" height="auto" autoplay playsinline></video>
-            <button id="captureButton" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Capture</button>
+    <div class="w-full grid grid-cols-2">
+        <div class="container mx-auto p-8 h-full" style="">
+
+            <h1 class="text-6xl font-bold mb-4 text-brown-800" style="color: maroon;">SPU GATE PASS</h1>
+    
+            <!-- Camera and Image Capture -->
+            <div class="">
+                <video id="video" class="border rounded-md" width="800" height="auto" autoplay playsinline></video>
+                <button id="captureButton" class="mt-4 text-white px-8 py-4 rounded-md" style="background-color: maroon;">Capture Image</button>
+            </div>
+    
+            
+    
         </div>
-
-        
-
-    </div>
-
-    <!-- Comparison Result -->
-    <div id="comparisonResult" >
-        <!-- Captured Image Display -->
-        <div id="capturedImageContainer" class="mb-8  hidden">
-            <h2 class="text-2xl font-bold mb-2">Captured Image</h2>
-            <img id="capturedImage" src="#" alt="Captured Image" class="border rounded-md ">
-            <button id="compareButton" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Compare</button>
-
-            <h2 class="text-2xl font-bold mb-2">Comparison Result</h2>
-            <p id="matchPercentage" class="text-xl font-semibold mb-4"></p>
-            <p id="identifiedUser" class="text-lg"></p>
-            <!-- Your form and other content -->
-
-           
-
+    
+        <!-- Comparison Result -->
+        <div id="comparisonResult" class="w-[500px] border rounded-md h-full m-2 px-4 flex flex-col gap-4 py-4" >
+            <!-- Captured Image Display -->
+            <div id="capturedImageContainer" class="mb-8  h-full hidden">
+                <h2 class="text-2xl font-bold mb-2">Captured Image</h2>
+                <img id="capturedImage" style="width: 300px; height: 300px; border-radius: 10px;" src="#" alt="Captured Image" class="border rounded-md h-[500px]">
+                <button id="compareButton" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded w-full py-4 mb-4">Find This User</button>
+    
+                <h2 class="text-2xl font-bold mb-2">Result</h2>
+                <p id="matchPercentage" class="text-xl font-semibold mb-4"></p>
+                <p id="identifiedUser" class="text-lg"></p>
+                
+                
+                
+            </div>
+            
         </div>
-
-        
-
-        
-    </div>
-    <!-- Your form and other content -->
-    <div id="resultContainer"></div>
-
-    <script>
-    document.getElementById("compareForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-        
-        let formData = new FormData(this);
-        
-        fetch("", {
-            method: "POST",
-            body: formData,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                document.getElementById("resultContainer").innerHTML = `
-                    <h2>Match Found!</h2>
-                    <p>User ID: ${data.user}</p>
-                    <p>Match Percentage: ${data.match_percentage}%</p>
-                    <img src="${data.captured_image_url}" alt="Captured Image">
-                `;
-            } else {
-                document.getElementById("resultContainer").innerHTML = "<h2>No Matches Found</h2>";
-            }
-        });
-    });
-    </script>
-
-
-
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.createElement('canvas');
-        const captureButton = document.getElementById('captureButton');
-        const capturedImage = document.getElementById('capturedImage');
-        const capturedImageContainer = document.getElementById('capturedImageContainer');
-        const compareButton = document.getElementById('compareButton');
-        const comparisonResult = document.getElementById('comparisonResult');
-        const matchPercentage = document.getElementById('matchPercentage');
-        const identifiedUser = document.getElementById('identifiedUser');
-
-        // Access the camera and stream the video
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error('Error accessing the camera:', err);
-                alert('Error accessing the camera. Please allow camera access and try again.');
-            }
-        }
-
-        // Capture an image from the video stream
-        captureButton.addEventListener('click', () => {
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            capturedImage.src = canvas.toDataURL('image/jpeg');
-            capturedImageContainer.classList.remove('hidden');
-        });
-
-        // Compare the captured image with database images
-        compareButton.addEventListener('click', async () => {
-            const formData = new FormData();
-            canvas.toBlob(async (blob) => {
-                formData.append('captured_image', blob);
-
-                const response = await fetch('{% url "compare_image" %}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    matchPercentage.textContent = `Match Percentage: ${data.match_percentage}%`;
-                    identifiedUser.textContent = `Identified User: ${data.user.username}`;
-                    comparisonResult.classList.remove('hidden');
-                } else {
-                    alert(data.error_message);
+    
+        <div id="resultContainer"></div>
+    
+        <script>
+        document.getElementById("compareForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            let formData = new FormData(this);
+            
+            fetch("", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
                 }
-            }, 'image/jpeg');
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    document.getElementById("resultContainer").innerHTML = `
+                        <h2>Match Found!</h2>
+                        <p>User ID: ${data.user}</p>
+                        <p>Match Percentage: ${data.match_percentage}%</p>
+                        <img src="${data.captured_image_url}" alt="Captured Image">
+                        <a href="{% url 'identified_user' 1 %}" 
+                        class="cursor-pointer underline text-blue-500 hover:text-blue-600">
+                            djjd
+                        </a>
+                    `;
+                } else {
+                    document.getElementById("resultContainer").innerHTML = "<h2>No Matches Found</h2>";
+                }
+            });
         });
+        </script>
+    
+    
+    
+        <script>
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const captureButton = document.getElementById('captureButton');
+            const capturedImage = document.getElementById('capturedImage');
+            const capturedImageContainer = document.getElementById('capturedImageContainer');
+            const compareButton = document.getElementById('compareButton');
+            const comparisonResult = document.getElementById('comparisonResult');
+            const matchPercentage = document.getElementById('matchPercentage');
+            const identifiedUser = document.getElementById('identifiedUser');
+            const userUrl = document.getElementById('userUrl');
+    
+            // Access the camera and stream the video
+            async function initCamera() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                } catch (err) {
+                    console.error('Error accessing the camera:', err);
+                    alert('Error accessing the camera. Please allow camera access and try again.');
+                }
+            }
+    
+            // Capture an image from the video stream
+            captureButton.addEventListener('click', () => {
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                capturedImage.src = canvas.toDataURL('image/jpeg');
+                capturedImageContainer.classList.remove('hidden');
+            });
+    
+            // Compare the captured image with database images
+            compareButton.addEventListener('click', async () => {
+                const formData = new FormData();
+                canvas.toBlob(async (blob) => {
+                    formData.append('captured_image', blob);
+    
+                    const response = await fetch('{% url "compare_image" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    });
+    
+                    const data = await response.json();
+    
+                    if (data.status === 'success') {
+                        matchPercentage.textContent = `Match Percentage: ${data.match_percentage}%`;
+                        identifiedUser.textContent = `Identified User: ${data.user.username}`;
+                        const userUrl = `/user/${data.user.id}/`;
+                        identifiedUser.innerHTML += ` <a href="${userUrl}" class="cursor-pointer underline text-blue-500 hover:text-blue-600">More About This User</a>`;
+        
+                        comparisonResult.classList.remove('hidden');
+                    } else {
+                        alert(data.error_message);
+                    }
+                }, 'image/jpeg');
+            });
+    
+            // Initialize the camera when the page loads
+            window.onload = function() {
+                initCamera();
+            };
+        </script>
+    
+    </div>
 
-        // Initialize the camera when the page loads
-        window.onload = function() {
-            initCamera();
-        };
-    </script>
-
+    
 </body>
 
 </html>

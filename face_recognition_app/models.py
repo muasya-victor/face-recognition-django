@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
+from datetime import datetime
 
 
 class CustomUser(AbstractUser):
@@ -32,6 +33,9 @@ class CapturedImage(models.Model):
 class RecognitionHistory(models.Model):
     recognition_image = models.ImageField(upload_to='review_image/', blank=True, null=True)
     image_bytes = models.BinaryField(blank=True, null=True)
-    recogntion_time = models.TimeField(blank=True, null=True)
+    recogntion_time = datetime.now()
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__ (self):
+        return f"{self.recognition_image} {self.recogntion_time}"
     
