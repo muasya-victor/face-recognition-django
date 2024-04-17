@@ -1,12 +1,10 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, UserProfile, CapturedImage,RecognitionHistory
+from .models import CustomUser, CapturedImage,RecognitionHistory
 
 
 admin.site.register(CustomUser)
 admin.site.register(RecognitionHistory)
 
-@admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'profile_picture']
 

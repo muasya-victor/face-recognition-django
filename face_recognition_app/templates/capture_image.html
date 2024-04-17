@@ -44,6 +44,9 @@
 
             // Assign the captured image data to a hidden input field in the form
             document.getElementById('imageDataInput').value = imageData;
+            
+            // Submit the form
+            document.getElementById('captureForm').submit();
         }
 
         // Initialize the camera when the page loads
@@ -54,11 +57,11 @@
         // Attach click event listener to the capture button
         captureButton.addEventListener('click', captureImage);
     </script>
-    <form method="POST">
+    <form id="captureForm" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <!-- Add a hidden input field to store the captured image data -->
-        <input type="hidden" id="imageDataInput" name="imageData">
-        <button type="submit">Submit</button>
+        <input type="hidden" id="imageDataInput" name="captured_image">
+        <button type="button" onclick="captureImage()">Submit</button>
     </form>
 </body>
 </html>

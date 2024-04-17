@@ -10,5 +10,4 @@ urlpatterns = [
     path('report/', views.report, name= 'Admin  Report Page'),
     path('generate-report', views.generate_pdf, name ="Generate PDF"),
     path('', views.compare_image, name='compare_image'),
-    path('result/', views.compare_image, name='compare_result'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

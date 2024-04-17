@@ -1,15 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compare Image</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 </head>
-<body>
-    <h1>Compare Image</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="captured_image" accept="image/*">
-        <button type="submit">Compare</button>
-    </form>
+
+<body class="bg-gray-100 h-screen grid grid-cols-2">
+
+    <div class="container mx-auto p-8">
+
+        <h1 class="text-3xl font-bold mb-4">Image Comparison</h1>
+
+        <!-- Camera and Image Capture -->
+        <div class="mb-8">
+            <video id="video" class="border rounded-md" width="500" height="auto" autoplay playsinline></video>
+            <button id="captureButton" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Capture</button>
+        </div>
+
+        
+
+    </div>
+
+    <!-- Comparison Result -->
+    <div id="comparisonResult" >
+        <!-- Captured Image Display -->
+        <div id="capturedImageContainer" class="mb-8  hidden">
+            <h2 class="text-2xl font-bold mb-2">Captured Image</h2>
+            <img id="capturedImage" src="#" alt="Captured Image" class="border rounded-md ">
+            <button id="compareButton" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Compare</button>
+
+            <h2 class="text-2xl font-bold mb-2">Comparison Result</h2>
+            <p id="matchPercentage" class="text-xl font-semibold mb-4"></p>
+            <p id="identifiedUser" class="text-lg"></p>
+            <!-- Your form and other content -->
+
+           
+
+        </div>
+
+        
+
+        
+    </div>
+    <!-- Your form and other content -->
+    <div id="resultContainer"></div>
+
+    <script>
+    document.getElementById("compareForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        
+        let formData = new FormData(this);
+        
+        fetch("", {
+            method: "POST",
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                document.getElementById("resultContainer").innerHTML = `
+                    <h2>Match Found!</h2>
+                    <p>User ID: ${data.user}</p>
+                    <p>Match Percentage: ${data.match_percentage}%</p>
+                    <img src="${data.captured_image_url}" alt="Captured Image">
+                `;
+            } else {
+                document.getElementById("resultContainer").innerHTML = "<h2>No Matches Found</h2>";
+            }
+        });
+    });
+    </script>
+
+
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.createElement('canvas');
+        const captureButton = document.getElementById('captureButton');
+        const capturedImage = document.getElementById('capturedImage');
+        const capturedImageContainer = document.getElementById('capturedImageContainer');
+        const compareButton = document.getElementById('compareButton');
+        const comparisonResult = document.getElementById('comparisonResult');
+        const matchPercentage = document.getElementById('matchPercentage');
+        const identifiedUser = document.getElementById('identifiedUser');
+
+        // Access the camera and stream the video
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error('Error accessing the camera:', err);
+                alert('Error accessing the camera. Please allow camera access and try again.');
+            }
+        }
+
+        // Capture an image from the video stream
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedImage.src = canvas.toDataURL('image/jpeg');
+            capturedImageContainer.classList.remove('hidden');
+        });
+
+        // Compare the captured image with database images
+        compareButton.addEventListener('click', async () => {
+            const formData = new FormData();
+            canvas.toBlob(async (blob) => {
+                formData.append('captured_image', blob);
+
+                const response = await fetch('{% url "compare_image" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    matchPercentage.textContent = `Match Percentage: ${data.match_percentage}%`;
+                    identifiedUser.textContent = `Identified User: ${data.user.username}`;
+                    comparisonResult.classList.remove('hidden');
+                } else {
+                    alert(data.error_message);
+                }
+            }, 'image/jpeg');
+        });
+
+        // Initialize the camera when the page loads
+        window.onload = function() {
+            initCamera();
+        };
+    </script>
+
 </body>
+
 </html>
