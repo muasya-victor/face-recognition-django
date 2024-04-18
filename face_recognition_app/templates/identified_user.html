@@ -9,7 +9,7 @@
 <body class="flex items-center justify-center h-screen bg-gray-200">
 
     <div style="display: flex; flex-direction: column; gap:4px;" class="p-4 w-1/2 rounded-md flex flex-col gap-4 items-center justify-center">
-        <img src="{{ user.avatar.url }}" alt="User Avatar"
+        <img src="{{ user.user_avatar.url }}" alt="User Avatar"
                 style="height: 300px; width: 300px; border-radius: 50%;" class="avatar-image">
 
                 <h1 class="text-4xl capitalize font-bold">
@@ -22,11 +22,11 @@
                 </p>
 
                 <p class="text-xl">
-                    {{user.identification_number}}
+                    {{user.user_identification_number}}
                 </p>
 
                 <p class="text-xl">
-                    {{user.phone_number}}
+                    {{user.user_phone_number}}
                 </p>
 
                 <a href="/" class="cursor-pointer underline text-blue-500 hover:text-blue-600">Back to Home</a>

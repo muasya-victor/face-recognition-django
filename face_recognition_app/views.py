@@ -74,7 +74,7 @@ def compare_image(request):
         similarity_scores = []
 
         for db_image in db_images:
-            db_image_array = cv2.imread(db_image.avatar.path)
+            db_image_array = cv2.imread(db_image.user_avatar.path)
 
             if db_image_array is None:
                 continue
@@ -112,8 +112,13 @@ def compare_image(request):
                     }
                 match_results['user_id'] = user_id
 
+
                 _, encoded_image = cv2.imencode('.jpg', captured_image_array)
-                recognition_history = RecognitionHistory.objects.create(recognition_image=ContentFile(encoded_image.tobytes(), name=captured_image.name))
+                recognition_history = RecognitionHistory.objects.create(
+                                        recognition_image=ContentFile(encoded_image.tobytes(), name=captured_image.name),
+                                        user=identified_user
+                                    )
+
                 match_results['captured_image_url'] = recognition_history.recognition_image.url
 
         # For debugging
