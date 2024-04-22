@@ -16,9 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),  # Include Django's built-in authentication URLs
     path('', include('face_recognition_app.urls')),  # Include your app's URLs
 ]
+
+urlpatterns += staticfiles_urlpatterns()
