@@ -1,0 +1,11 @@
+{
+    "builds" : [{
+        "src": "face_recogntion_project/wsgi.py",
+        "use": "@vercel/python",
+        "config": {"maxLAmbdaSize": "15mb", "runtime": "python3.10.12"}
+    }],
+    "routes":[{
+        "src": "./(.*)",
+        "dest": "face_recogntion_project/wsgi.py"
+    }]
+}

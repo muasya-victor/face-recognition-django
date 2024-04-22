@@ -210,7 +210,7 @@ def generate_pdf_report(request):
     # Create table data
     data = [["Recognition Time", "User"]]
     for history in recognition_history:
-        data.append([str(history.recogntion_time), 'Gilbert'])
+        data.append([str(history.recogntion_time), str(history.user.username)])
 
     # Create table
     table = Table(data)
