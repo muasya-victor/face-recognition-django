@@ -99,3 +99,4 @@ Werkzeug==3.0.2
 wrapt==1.16.0
 xhtml2pdf==0.2.15
 zopfli==0.2.3
+gunicorn
